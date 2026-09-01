@@ -1,15 +1,36 @@
-# 临时下载文件
+# 最终输出产物
 Downloads/.tmp-*/
+Downloads/
 
-# Python
+# Python 编译缓存与虚拟环境
 __pycache__/
-*.pyc
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
-# 系统文件
+# IDE 配置
+.vscode/*
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/settings.json
+.idea/
+*.iml
+.vs/
+
+# Claude Code 本地配置
+/.claude/settings.local.json
+
+# CodeGraph 本地索引
+.codegraph/
+
+# 操作系统文件
 .DS_Store
 Thumbs.db
 
-# 编辑器
-*.swp
-*.swo
-*~
+# 临时文件
+*.tmp
