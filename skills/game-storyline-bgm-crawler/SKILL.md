@@ -69,6 +69,10 @@ python3 scripts/crawl_version.py <前缀> <版本> --download <编号>
 
 下载到 `Downloads/<前缀>-<版本>/tracks/`，同时生成 `metadata.json` 和 `preview.html`。
 
+> 集成进 game-storyline-pipeline 管线时，下载后把 tracks 移到统一工作区：
+> `mv Downloads/<前缀>-<版本>/tracks/*.mp3 "$MMM_DATA_ROOT/genshin/musics/{版本}/"`
+> （脚本当前无 `-o` 参数，产物目录硬编码仓库 `Downloads/`，由编排层归位）
+
 阶段一会在 `Downloads/<前缀>-<版本>/` 生成 `preview.html` 预览页，底部固定播放器，浏览器打开可直接试听所有候选曲目。
 
 ## 输出目录结构
