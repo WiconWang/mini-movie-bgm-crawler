@@ -3,13 +3,13 @@
 游戏版本BGM采集脚本（两阶段：搜索分析 → 确认后下载）
 用法:
   # 阶段一：搜索 + 分析（不下载）
-  python3 crawl_version.py gs 2.1 --dry-run
+  python3 crawl_version.py genshin 2.1 --dry-run
 
   # 阶段二：下载指定编号
-  python3 crawl_version.py gs 2.1 --download 1,3,5,7
+  python3 crawl_version.py genshin 2.1 --download 1,3,5,7
 
   # 下载全部候选
-  python3 crawl_version.py gs 2.1 --download all
+  python3 crawl_version.py genshin 2.1 --download all
 """
 import argparse
 import json
@@ -30,10 +30,10 @@ BPM_SCRIPT = os.path.join(SCRIPT_DIR, "bpm_analyze.py")
 
 # 游戏前缀映射
 GAME_PREFIXES = {
-    "gs": "原神",
-    "hsr": "崩坏星穹铁道",
+    "genshin": "原神",
+    "starrail": "星穹铁道",
     "zzz": "绝区零",
-    "ww": "鸣潮",
+    "wave": "鸣潮",
 }
 
 # 排除关键词（战斗相关）
@@ -50,7 +50,7 @@ PREFER_KEYWORDS = [
 ]
 
 # 版本→OST专辑映射（原神）
-VERSION_MAP_GS = {
+VERSION_MAP_GENSHIN = {
     "1.0": {"region": "蒙德/璃月", "albums": ["风与牧歌之城", "皎月云间之梦"]},
     "1.1": {"region": "璃月", "albums": ["皎月云间之梦"]},
     "1.2": {"region": "蒙德(龙脊)", "albums": ["风与牧歌之城", "漩涡、落星与冰山"]},
@@ -96,7 +96,7 @@ VERSION_MAP_GS = {
 # 版本→OST专辑映射（崩坏星穹铁道）
 # 铁道 OST 结构：Experience the Paths = PV主题曲(偏燃)，Astral Theater = 角色曲
 # Allegory of the Cave = 故事/区域OST(轻柔BGM) → 优先搜索
-VERSION_MAP_HSR = {
+VERSION_MAP_STARRAIL = {
     "1.0": {"region": "空间站/雅利洛", "albums": ["Out of Control", "Of Snow and Ember"]},
     "1.1": {"region": "空间站/雅利洛", "albums": ["Of Snow and Ember", "Svah Sanishyu"]},
     "1.2": {"region": "仙舟", "albums": ["Svah Sanishyu"]},
@@ -123,10 +123,10 @@ VERSION_MAP_HSR = {
 
 # 版本映射注册表
 VERSION_MAPS = {
-    "gs": VERSION_MAP_GS,
-    "hsr": VERSION_MAP_HSR,
-    # "zzz": {},  # 待补充
-    # "ww": {},   # 待补充
+    "genshin": VERSION_MAP_GENSHIN,
+    "starrail": VERSION_MAP_STARRAIL,
+    # "zzz": {},  # 待补充（绝区零）
+    # "wave": {},  # 待补充（鸣潮）
 }
 
 
@@ -409,7 +409,8 @@ def download_confirmed(candidates, indices, prefix, version, region, albums):
     return downloaded
 
 
-def generate_preview_html(candidates, game_name, version, region, albums, output_file, temp_dir):
+def generate_preview_html(candidates, prefix, version, region, albums, output_file, temp_dir):
+    game_name = GAME_PREFIXES.get(prefix, prefix)
     """生成可试听的 HTML 预览页（使用远程 URL）"""
     rows = []
     for i, c in enumerate(candidates):
@@ -512,7 +513,7 @@ def generate_preview_html(candidates, game_name, version, region, albums, output
   </tbody>
 </table>
 <div class="tip">💡 点击行播放/暂停。确认编号后执行：<br>
-<code>python3 scripts/crawl_version.py gs {version} --download &lt;编号&gt;</code></div>
+<code>python3 scripts/crawl_version.py {prefix} {version} --download &lt;编号&gt;</code></div>
 
 <div class="player-bar" id="player-bar">
   <div class="track-info">
@@ -564,7 +565,7 @@ player.addEventListener('ended', () => {{
 
 def main():
     parser = argparse.ArgumentParser(description="游戏版本BGM采集器")
-    parser.add_argument("prefix", choices=GAME_PREFIXES.keys(), help="游戏前缀 (gs/zzz/ww)")
+    parser.add_argument("prefix", choices=GAME_PREFIXES.keys(), help="游戏 code（genshin/zzz/starrail/wave/endfield，绝区零/终末地映射待补充）")
     parser.add_argument("version", help="版本号，如 2.1、1.5")
     parser.add_argument("--service", default="wangyi", help="音乐源 (default: wangyi)")
     parser.add_argument("--dry-run", action="store_true", help="只搜索分析不下载（阶段一）")
@@ -656,7 +657,7 @@ def main():
         version_dir = os.path.join(DOWNLOADS_DIR, f"{prefix}-{version}")
         os.makedirs(version_dir, exist_ok=True)
         preview_file = os.path.join(version_dir, "preview.html")
-        generate_preview_html(candidates, game_name, version, info['region'], info['albums'], preview_file, temp_dir)
+        generate_preview_html(candidates, prefix, version, info['region'], info['albums'], preview_file, temp_dir)
         print(f"\n🔊 预览页已生成: {preview_file}")
         print(f"   用浏览器打开即可试听")
 
