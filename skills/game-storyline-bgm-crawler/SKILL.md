@@ -3,7 +3,7 @@ name: game-storyline-bgm-crawler
 description: >-
   为游戏版本自动采集适合做视频BGM的轻柔音乐。
   根据版本号映射到OST专辑，从网易云搜索下载，分析BPM/响度，筛选轻柔候选。
-  支持多游戏：原神(gs)、绝区零(zzz)、鸣潮(ww)。
+  游戏 code 与统一台账一致：genshin/zzz/starrail/wave/endfield。
   触发词：原神BGM、版本BGM、OST采集、BGM筛选、game-storyline-bgm-crawler、绝区零BGM、鸣潮BGM。
 ---
 
@@ -11,14 +11,15 @@ description: >-
 
 为游戏版本自动采集适合做视频BGM的轻柔音乐。支持多游戏。
 
-## 支持的游戏
+## 支持的游戏（code 与统一台账一致，定死后不改）
 
-| 游戏 | 前缀 | 目录名示例 | 状态 |
+| 游戏 | code | 目录名示例 | 状态 |
 |------|------|------------|------|
-| 原神 | `gs` | `gs-2.1` | ✅ 已适配 |
-| 崩坏星穹铁道 | `hsr` | `hsr-3.6` | ✅ 已适配 |
+| 原神 | `genshin` | `genshin-2.1` | ✅ 已适配 |
+| 星穹铁道 | `starrail` | `starrail-3.6` | ✅ 已适配 |
 | 绝区零 | `zzz` | `zzz-1.2` | 🔲 待适配 |
-| 鸣潮 | `ww` | `ww-1.0` | 🔲 待适配 |
+| 鸣潮 | `wave` | `wave-1.0` | 🔲 待适配 |
+| 终末地 | `endfield` | — | 🔲 待适配 |
 
 ## 依赖
 
@@ -40,8 +41,8 @@ uv pip install --python /tmp/audio-venv/bin/python librosa soundfile
 ### 阶段一：搜索 + 分析
 
 ```bash
-python3 scripts/crawl_version.py <前缀> <版本> --dry-run
-# 例：python3 scripts/crawl_version.py gs 2.1 --dry-run
+python3 scripts/crawl_version.py <code> <版本> --dry-run
+# 例：python3 scripts/crawl_version.py genshin 2.1 --dry-run
 ```
 
 流程：版本号 → 映射OST专辑 → musicn搜索 → 过滤战斗曲 → 临时下载 → BPM/RMS分析 → 输出候选清单
@@ -62,16 +63,20 @@ python3 scripts/crawl_version.py <前缀> <版本> --dry-run
 ### 阶段二：用户确认后下载
 
 ```bash
-python3 scripts/crawl_version.py <前缀> <版本> --download <编号>
-# 例：python3 scripts/crawl_version.py gs 2.1 --download 1,2
-# 例：python3 scripts/crawl_version.py gs 2.1 --download all
+python3 scripts/crawl_version.py <code> <版本> --download <编号>
+# 例：python3 scripts/crawl_version.py genshin 2.1 --download 1,2
+# 例：python3 scripts/crawl_version.py genshin 2.1 --download all
 ```
 
-下载到 `Downloads/<前缀>-<版本>/tracks/`，同时生成 `metadata.json` 和 `preview.html`。
+下载到 `Downloads/<code>-<版本>/tracks/`，同时生成 `metadata.json` 和 `preview.html`。
 
-> 集成进 game-storyline-pipeline 管线时，下载后把 tracks 移到统一工作区：
-> `mv Downloads/<前缀>-<版本>/tracks/*.mp3 "$MMM_DATA_ROOT/genshin/musics/{版本}/"`
-> （脚本当前无 `-o` 参数，产物目录硬编码仓库 `Downloads/`，由编排层归位）
+> 登记进统一台账（版本级 bgm 资产，落 `{game}/{version}/_version/bgm/`，BPM/RMS 进 ledger `meta_json`）：
+> ```bash
+> mmm add-asset --game genshin --version 2.1 --slug <quest_slug> \
+>     --kind bgm --src Downloads/genshin-2.1/tracks/01-美梦抚归人.mp3 \
+>     --source-url "<OST专辑>"
+> ```
+> （脚本无 `-o` 参数，产物目录硬编码仓库 `Downloads/`，登记时 `add-asset` 复制入库；`--slug` 仅用于定位版本，bgm 不挂 quest。）
 
 阶段一会在 `Downloads/<前缀>-<版本>/` 生成 `preview.html` 预览页，底部固定播放器，浏览器打开可直接试听所有候选曲目。
 
@@ -79,13 +84,13 @@ python3 scripts/crawl_version.py <前缀> <版本> --download <编号>
 
 ```
 Downloads/
-  gs-2.1/                           # 原神 2.1
-    metadata.json                   # 版本元信息 + 曲目列表
-    preview.html                    # 可试听的候选预览页
+  genshin-2.1/                    # 原神 2.1
+    metadata.json                 # 版本元信息 + 曲目列表
+    preview.html                  # 可试听的候选预览页
     tracks/
       01-美梦抚归人.mp3
       02-青云流风饰霓裳.mp3
-  .tmp-gs-2.1/                      # 临时文件（阶段一用）
+  .tmp-genshin-2.1/               # 临时文件（阶段一用）
     01.mp3
     name_map.json
     url_map.json
@@ -93,7 +98,7 @@ Downloads/
 
 ## 版本→OST专辑映射
 
-详见 [references/version-album-map.md](references/version-album-map.md)。
+映射表内联如下（原 references/version-album-map.md 已删除，以此处为准）。
 
 ### 原神
 
