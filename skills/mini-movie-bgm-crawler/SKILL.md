@@ -38,6 +38,8 @@ uv pip install --python /tmp/audio-venv/bin/python librosa soundfile
 
 ## 两阶段工作流
 
+> 脚本位于本 skill 目录 `scripts/` 下，以下命令均从 skill 目录（本 SKILL.md 所在目录）执行；产物落仓库根 `Downloads/`。
+
 ### 阶段一：搜索 + 分析
 
 ```bash
@@ -98,7 +100,7 @@ Downloads/
 
 ## 版本→OST专辑映射
 
-映射表内联如下（原 references/version-album-map.md 已删除，以此处为准）。
+映射表内联如下（原件备份于本 skill 目录 `references/version-album-map.md`，以内联表为准）。
 
 ### 原神
 

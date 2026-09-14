@@ -24,7 +24,7 @@ import urllib.request
 MUSICN_API = "http://localhost:18080"
 PYTHON_VENV = "/tmp/audio-venv/bin/python3"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
+PROJECT_DIR = os.path.dirname(os.path.dirname(SCRIPT_DIR))  # skills/<skill>/scripts → 仓库根
 DOWNLOADS_DIR = os.path.join(PROJECT_DIR, "Downloads")
 BPM_SCRIPT = os.path.join(SCRIPT_DIR, "bpm_analyze.py")
 
