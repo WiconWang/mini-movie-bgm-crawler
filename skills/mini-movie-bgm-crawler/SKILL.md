@@ -1,10 +1,10 @@
 ---
-name: game-storyline-bgm-crawler
+name: mini-movie-bgm-crawler
 description: >-
   为游戏版本自动采集适合做视频BGM的轻柔音乐。
   根据版本号映射到OST专辑，从网易云搜索下载，分析BPM/响度，筛选轻柔候选。
   游戏 code 与统一台账一致：genshin/zzz/starrail/wave/endfield。
-  触发词：原神BGM、版本BGM、OST采集、BGM筛选、game-storyline-bgm-crawler、绝区零BGM、鸣潮BGM。
+  触发词：原神BGM、版本BGM、OST采集、BGM筛选、mini-movie-bgm-crawler、绝区零BGM、鸣潮BGM。
 ---
 
 # 游戏版本BGM采集器
