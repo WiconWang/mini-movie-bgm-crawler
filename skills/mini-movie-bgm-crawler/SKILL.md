@@ -38,7 +38,8 @@ uv pip install --python /tmp/audio-venv/bin/python librosa soundfile
 
 ## 两阶段工作流
 
-> 脚本位于本 skill 目录 `scripts/` 下，以下命令均从 skill 目录（本 SKILL.md 所在目录）执行；产物落仓库根 `Downloads/`。
+> 脚本位于本 skill 目录 `scripts/` 下，以下命令均从 skill 目录（本 SKILL.md 所在目录）执行；产物落 `-o/--out-dir` 指定目录（默认仓库根 `Downloads/`）。
+> **作为 game-storyline-pipeline 一环时**：管线铁律要求产物不进各 skill 仓库，必须显式 `-o` 暂存（如 `-o /tmp/bgm-staging`），再 `mmm add-asset` 登记入库。
 
 ### 阶段一：搜索 + 分析
 
@@ -70,22 +71,22 @@ python3 scripts/crawl_version.py <code> <版本> --download <编号>
 # 例：python3 scripts/crawl_version.py genshin 2.1 --download all
 ```
 
-下载到 `Downloads/<code>-<版本>/tracks/`，同时生成 `metadata.json` 和 `preview.html`。
+下载到 `<out-dir>/<code>-<版本>/tracks/`（`-o` 指定，默认仓库 `Downloads/`），同时生成 `metadata.json` 和 `preview.html`。
 
 > 登记进统一台账（版本级 bgm 资产，落 `{game}/{version}/_version/bgm/`，BPM/RMS 进 ledger `meta_json`）：
 > ```bash
 > mmm add-asset --game genshin --version 2.1 --slug <quest_slug> \
->     --kind bgm --src Downloads/genshin-2.1/tracks/01-美梦抚归人.mp3 \
+>     --kind bgm --src <out-dir>/genshin-2.1/tracks/01-美梦抚归人.mp3 \
 >     --source-url "<OST专辑>"
 > ```
-> （脚本无 `-o` 参数，产物目录硬编码仓库 `Downloads/`，登记时 `add-asset` 复制入库；`--slug` 仅用于定位版本，bgm 不挂 quest。）
+> （`-o/--out-dir` 指定暂存根；登记时 `add-asset` 复制入库。`--slug` 仅用于定位版本，bgm 不挂 quest。）
 
-阶段一会在 `Downloads/<前缀>-<版本>/` 生成 `preview.html` 预览页，底部固定播放器，浏览器打开可直接试听所有候选曲目。
+阶段一会在 `<out-dir>/<前缀>-<版本>/` 生成 `preview.html` 预览页，底部固定播放器，浏览器打开可直接试听所有候选曲目。
 
 ## 输出目录结构
 
 ```
-Downloads/
+<out-dir>/                         # -o 指定；默认仓库根 Downloads/
   genshin-2.1/                    # 原神 2.1
     metadata.json                 # 版本元信息 + 曲目列表
     preview.html                  # 可试听的候选预览页

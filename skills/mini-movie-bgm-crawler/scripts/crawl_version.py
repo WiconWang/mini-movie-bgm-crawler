@@ -24,7 +24,7 @@ import urllib.request
 MUSICN_API = "http://localhost:18080"
 PYTHON_VENV = "/tmp/audio-venv/bin/python3"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-PROJECT_DIR = os.path.dirname(os.path.dirname(SCRIPT_DIR))  # skills/<skill>/scripts → 仓库根
+PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(SCRIPT_DIR)))  # skills/<skill>/scripts → 仓库根
 DOWNLOADS_DIR = os.path.join(PROJECT_DIR, "Downloads")
 BPM_SCRIPT = os.path.join(SCRIPT_DIR, "bpm_analyze.py")
 
@@ -564,6 +564,8 @@ player.addEventListener('ended', () => {{
 
 
 def main():
+    global DOWNLOADS_DIR
+
     parser = argparse.ArgumentParser(description="游戏版本BGM采集器")
     parser.add_argument("prefix", choices=GAME_PREFIXES.keys(), help="游戏 code（genshin/zzz/starrail/wave/endfield，绝区零/终末地映射待补充）")
     parser.add_argument("version", help="版本号，如 2.1、1.5")
@@ -571,7 +573,12 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="只搜索分析不下载（阶段一）")
     parser.add_argument("--download", type=str, help="下载指定编号，逗号分隔，或 'all'（阶段二）")
     parser.add_argument("--page-size", type=int, default=50, help="每专辑搜索数量")
+    parser.add_argument("-o", "--out-dir", default=DOWNLOADS_DIR,
+                        help=f"输出根目录（默认 {DOWNLOADS_DIR}）")
     args = parser.parse_args()
+
+    DOWNLOADS_DIR = os.path.abspath(os.path.expanduser(args.out_dir))
+    os.makedirs(DOWNLOADS_DIR, exist_ok=True)
 
     prefix = args.prefix
     version = args.version
