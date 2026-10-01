@@ -22,7 +22,28 @@ import urllib.request
 
 # 配置
 MUSICN_API = "http://localhost:18080"
-PYTHON_VENV = "/tmp/audio-venv/bin/python3"
+
+
+def _resolve_audio_python() -> str:
+    """跨平台解析音频分析解释器（需含 librosa/soundfile）。
+
+    优先级：MMM_AUDIO_VENV_PYTHON 显式指定 → 约定 venv ~/.venvs/audio（按平台布局探测）
+    → 当前解释器兜底。勿用 /tmp：重启即丢，曾导致 BPM/RMS 分析静默返回 0 首
+    （json.loads("") 只报 Expecting value，真实原因被吞）。
+    """
+    override = os.environ.get("MMM_AUDIO_VENV_PYTHON", "").strip()
+    if override:
+        return override
+    venv = os.path.join(os.path.expanduser("~"), ".venvs", "audio")
+    names = ("Scripts/python.exe",) if sys.platform == "win32" else ("bin/python3", "bin/python")
+    for name in names:
+        candidate = os.path.join(venv, name)
+        if os.path.exists(candidate):
+            return candidate
+    return sys.executable
+
+
+PYTHON_VENV = _resolve_audio_python()
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(SCRIPT_DIR)))  # skills/<skill>/scripts → 仓库根
 DOWNLOADS_DIR = os.path.join(PROJECT_DIR, "Downloads")
@@ -226,10 +247,22 @@ def analyze_tracks(tracks, temp_dir):
     """分析所有已下载曲目的BPM和RMS，并关联原始歌名"""
     if not tracks:
         return []
+    if not os.path.exists(PYTHON_VENV):
+        print(
+            f"  ✗ 音频分析解释器不存在: {PYTHON_VENV}\n"
+            f"    请按 skill 文档「环境准备」建一个含 librosa+soundfile 的 venv\n"
+            f"    （约定位置 ~/.venvs/audio），或用 MMM_AUDIO_VENV_PYTHON 指向已有环境",
+            file=sys.stderr,
+        )
+        return []
     files = " ".join(f'"{t["path"]}"' for t in tracks)
     cmd = f'"{PYTHON_VENV}" "{BPM_SCRIPT}" {files}'
     try:
         result = subprocess.run(cmd, shell=True, capture_output=True, text=True, timeout=300)
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"bpm_analyze.py 退出码 {result.returncode}；stderr: {result.stderr.strip()[:300]}"
+            )
         analyzed = json.loads(result.stdout)
     except Exception as e:
         print(f"  ✗ BPM分析失败: {e}", file=sys.stderr)

@@ -32,9 +32,15 @@ description: >-
 环境准备：
 ```bash
 msc -q -P 18080 &                    # 启动 musicn Web 服务
-uv venv /tmp/audio-venv              # 首次需建 venv
-uv pip install --python /tmp/audio-venv/bin/python librosa soundfile
+uv venv ~/.venvs/audio               # 音频分析 venv（持久路径，勿用 /tmp）
+# 安装 librosa+soundfile —— 解释器路径随平台而异：
+uv pip install --python ~/.venvs/audio/bin/python librosa soundfile        # Linux / macOS
+uv pip install --python ~/.venvs/audio/Scripts/python.exe librosa soundfile   # Windows
 ```
+> 分析用的解释器由 `crawl_version.py` 在**运行时**解析（`_resolve_audio_python()`）：
+> `MMM_AUDIO_VENV_PYTHON` 显式指定 → 约定 venv `~/.venvs/audio`（按平台探测
+> `bin/python3` 或 `Scripts/python.exe`）→ 当前解释器兜底。
+> **不要用 `/tmp` 存 venv**：重启即丢，会导致 BPM/RMS 分析静默返回 0 首。
 
 ## 两阶段工作流
 
@@ -157,8 +163,13 @@ python3 scripts/crawl_version.py <code> <版本> --download <编号>
 ### musicn Web 服务崩溃
 下载 URL 失效时进程可能退出。解决：监控进程，必要时重启 `msc -q -P 18080 &`。
 
-### librosa venv 重启后丢失
-venv 在 `/tmp/audio-venv`，系统重启后需重建。脚本中已有自动创建逻辑。
+### 音频分析失败（BPM/RMS 全空 / 结果 0 首）
+先看 stderr：脚本会显式报出解释器路径与退出码。
+- **`✗ 音频分析解释器不存在: <路径>`** → venv 丢了，按上文「环境准备」重建（注意平台差异）
+- 换用其它含 librosa 的解释器：`export MMM_AUDIO_VENV_PYTHON=/path/to/python`
+- ⚠️ 历史坑：`PYTHON_VENV` 曾硬编码 `/tmp/audio-venv`，**重启后 venv 消失**，
+  而 `json.loads("")` 只抛出 "Expecting value"，真实原因被吞 →
+  **BGM 能搜能下但分析结果恒为 0 首、看不出原因**。现已改为运行时跨平台解析 + 前置存在性检查。
 
 ### 临时文件名丢失歌名
 musicn 下载临时文件用序号命名（01.mp3），需通过 `name_map.json` 映射回原始歌名。脚本已处理此问题（`download_temp` 函数）。
